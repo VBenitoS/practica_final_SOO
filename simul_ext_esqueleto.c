@@ -12,7 +12,7 @@ int BuscaFich(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
               char *nombre);
 void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos); // HECHO
 int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
-              char *nombreantiguo, char *nombrenuevo);
+              char *nombreantiguo, char *nombrenuevo); // HECHO
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
              EXT_DATOS *memdatos, char *nombre);
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
@@ -140,4 +140,30 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos) {
         }
         printf("\n");
     }
+}
+
+// ESTE ES RENOMBRAR FICHERO
+int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
+              char *nombreAntiguo, char *nuevoNombre) {
+    int i, archivo_origen = -1, archivo_destino = -1;
+    for (i = 0; i < MAX_FICHEROS; i++) {
+        if (strcmp(directorio[i].dir_nfich, nombreAntiguo) == 0) {
+            archivo_origen = i;
+        }
+        if (strcmp(directorio[i].dir_nfich, nuevoNombre) == 0) {
+            archivo_destino = i;
+        }
+    }
+    if (archivo_origen == -1) {
+        printf("ERROR: Fichero %s no encontrado\n", nombreAntiguo);
+        return -1;
+    }
+    if (archivo_destino != -1) {
+        printf("ERROR: El fichero %s ya existe\n", nuevoNombre);
+        return -1;
+    }
+    strncpy(directorio[archivo_origen].dir_nfich, nuevoNombre, LEN_NFICH - 1);
+    directorio[archivo_origen].dir_nfich[LEN_NFICH - 1] = '\0';
+    printf("El fichero %s ahora se llama %s\n", nombreAntiguo, nuevoNombre);
+    return 0;
 }
