@@ -6,7 +6,7 @@
 #define LONGITUD_COMANDO 100
 
 void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps); // HECHO
-int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2);
+int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2); //HECHO
 void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup); // HECHO
 int BuscaFich(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
               char *nombre);
@@ -21,10 +21,10 @@ int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
-void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich);
-void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich);
-void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich);
-void GrabarDatos(EXT_DATOS *memdatos, FILE *fich);
+void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich); //HECHO
+void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich); //HECHO
+void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich); // HECHO
+void GrabarDatos(EXT_DATOS *memdatos, FILE *fich); // HECHO
 
 int main()
 {
@@ -79,6 +79,13 @@ int main()
         Directorio(&directorio,&ext_blq_inodos);
         continue;
       }
+
+      if (strcmp(orden, "rename") == 0) {
+        if (Renombrar(directorio, &ext_blq_inodos, argumento1, argumento2) == 0) {
+            Grabarinodosydirectorio(directorio, &ext_blq_inodos, fent);
+        }
+        continue;
+      }
         // Escritura de metadatos en comandos rename, remove, copy
         Grabarinodosydirectorio(&directorio,&ext_blq_inodos,fent);
         GrabarByteMaps(&ext_bytemaps,fent);
@@ -88,12 +95,16 @@ int main()
         grabardatos = 0;
         //Si el comando es salir se habrán escrito todos los metadatos
         //faltan los datos y cerrar
-        if (strcmp(orden,"salir")==0){
-          GrabarDatos(&memdatos,fent);
-          fclose(fent);
-          printf("Has salido correctamente!\n");
-          return 0;
-        }
+
+      if (strcmp(orden,"salir")==0){
+        GrabarDatos(&memdatos,fent);
+        fclose(fent);
+        printf("Has salido correctamente!\n");
+        return 0;
+      }
+
+      //imprimir el comando desconocido en caso de que este lo sea
+      printf("ERROR: Comando desconocido: %s\n", orden);
     }
 }
 
@@ -166,4 +177,35 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
     directorio[archivo_origen].dir_nfich[LEN_NFICH - 1] = '\0';
     printf("El fichero %s ahora se llama %s\n", nombreAntiguo, nuevoNombre);
     return 0;
+}
+
+int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2) {
+    int num_args = sscanf(strcomando, "%s %s %s", orden, argumento1, argumento2);
+    if (num_args < 1) {
+        return 1;
+    }
+    return 0;
+}
+
+// GUARDAR LOS DAOS EN EL ARCHIVO BINARIO
+void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich) {
+    fseek(fich, SIZE_BLOQUE * 2, SEEK_SET);
+    fwrite(inodos, SIZE_BLOQUE, 1, fich);
+    fseek(fich, SIZE_BLOQUE * 3, SEEK_SET);
+    fwrite(directorio, SIZE_BLOQUE, 1, fich);
+}
+
+void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich) {
+    fseek(fich, SIZE_BLOQUE, SEEK_SET);
+    fwrite(ext_bytemaps, SIZE_BLOQUE, 1, fich);
+}
+
+void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich) {
+    fseek(fich, 0, SEEK_SET);
+    fwrite(ext_superblock, SIZE_BLOQUE, 1, fich);
+}
+
+void GrabarDatos(EXT_DATOS *memdatos, FILE *fich) {
+    fseek(fich, SIZE_BLOQUE * PRIM_BLOQUE_DATOS, SEEK_SET);
+    fwrite(memdatos, SIZE_BLOQUE, MAX_BLOQUES_DATOS, fich);
 }
