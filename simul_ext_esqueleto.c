@@ -70,6 +70,11 @@ int main()
         continue;
       }
 
+      if (strcmp(orden, "bytemaps") == 0) {
+        Printbytemaps(&ext_bytemaps); // Llama a la función y pasa el bytemap
+        continue;
+      }
+
       if (strcmp(orden,"dir")==0) {
         Directorio(&directorio,&ext_blq_inodos);
         continue;
@@ -86,11 +91,13 @@ int main()
         if (strcmp(orden,"salir")==0){
           GrabarDatos(&memdatos,fent);
           fclose(fent);
+          printf("Has salido correctamente!\n");
           return 0;
         }
     }
 }
 
+// ESTE ES PARA EL INFO
 void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup) {
   printf("Bloque %u Bytes\n", psup->s_block_size);
   printf("Inodos particion = %u\n", psup->s_inodes_count);
@@ -98,4 +105,19 @@ void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup) {
   printf("Bloques particion = %u\n", psup->s_blocks_count);
   printf("Bloques libres = %u\n", psup->s_free_blocks_count);
   printf("Primer bloque de datos = %u\n", psup->s_first_data_block);
+}
+
+// ESTE ES EL BYTEMAPS
+void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps) {
+    printf("Inodos: ");
+    for (int i = 0; i < MAX_INODOS; i++) {
+        printf("%d ", ext_bytemaps->bmap_inodos[i]);
+    }
+    printf("\n");
+
+    printf("Bloques [0-25]: ");
+    for (int i = 0; i < 25; i++) {
+        printf("%d ", ext_bytemaps->bmap_bloques[i]);
+    }
+    printf("\n");
 }
