@@ -5,12 +5,12 @@
 
 #define LONGITUD_COMANDO 100
 
-void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps);
+void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps); // HECHO
 int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2);
-void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup);
+void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup); // HECHO
 int BuscaFich(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
               char *nombre);
-void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos);
+void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos); // HECHO
 int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
               char *nombreantiguo, char *nombrenuevo);
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
@@ -120,4 +120,24 @@ void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps) {
         printf("%d ", ext_bytemaps->bmap_bloques[i]);
     }
     printf("\n");
+}
+
+// ESTE ES PARA VER EL DIRECTORIO
+void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos) {
+    for (int i = 0; i < MAX_FICHEROS; i++) {
+        if (directorio[i].dir_inodo == NULL_INODO) {
+            continue;
+        }
+        EXT_SIMPLE_INODE *inodo = &inodos->blq_inodos[directorio[i].dir_inodo];
+        printf("%s\ttamaño:%u\tinodo:%u\tbloques:",
+            directorio[i].dir_nfich,
+            inodo->size_fichero,
+            directorio[i].dir_inodo);
+        for (int j = 0; j < MAX_NUMS_BLOQUE_INODO; j++) {
+            if (inodo->i_nbloque[j] != NULL_BLOQUE) {
+                printf(" %u", inodo->i_nbloque[j]);
+            }
+        }
+        printf("\n");
+    }
 }
