@@ -9,26 +9,26 @@ void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps); // HECHO
 int ComprobarComando(char *strcomando, char *orden, char *argumento1, char *argumento2); //HECHO
 void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup); // HECHO
 int BuscaFich(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
-              char *nombre);
+              char *nombre); // HECHO
 void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos); // HECHO
 int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
               char *nombreantiguo, char *nombrenuevo); // HECHO
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
-             EXT_DATOS *memdatos, char *nombre);
+             EXT_DATOS *memdatos, char *nombre); // HECHO
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-           char *nombre,  FILE *fich);
+           char *nombre,  FILE *fich); // HECHO
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-           EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
+           EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich); // HECHO
 int CrearFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
                  EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-                 EXT_DATOS *memdatos, char *nombre_fichero, FILE *fich);
+                 EXT_DATOS *memdatos, char *nombre_fichero, FILE *fich); // HECHO
 void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich); //HECHO
 void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich); //HECHO
 void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich); // HECHO
 void GrabarDatos(EXT_DATOS *memdatos, FILE *fich); // HECHO
-int BuscarInodoLibre(EXT_BYTE_MAPS *ext_bytemaps);
+int BuscarInodoLibre(EXT_BYTE_MAPS *ext_bytemaps); // HECHO
 
 
 int main() {
@@ -174,7 +174,7 @@ int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
     for (int i = 0; i < MAX_FICHEROS; i++) {
         if (strcmp(directorio[i].dir_nfich, nombre) == 0) {
             if (directorio[i].dir_inodo != NULL_INODO) {
-                // Limpieza de inodo
+
                 EXT_SIMPLE_INODE *inodo = &inodos->blq_inodos[directorio[i].dir_inodo];
                 for (int j = 0; j < MAX_NUMS_BLOQUE_INODO; j++) {
                     if (inodo->i_nbloque[j] != NULL_BLOQUE) {
@@ -187,11 +187,9 @@ int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
                 ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] = 0;
                 ext_superblock->s_free_inodes_count++;
 
-                // Limpieza de directorio
                 memset(directorio[i].dir_nfich, 0, LEN_NFICH);
                 directorio[i].dir_inodo = NULL_INODO;
 
-                // Grabación de cambios
                 GrabarByteMaps(ext_bytemaps, fich);
                 GrabarSuperBloque(ext_superblock, fich);
                 Grabarinodosydirectorio(directorio, inodos, fich);
@@ -199,7 +197,7 @@ int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
             }
         }
     }
-    return -1; // Fichero no encontrado
+    return -1;
 }
 
 
@@ -220,7 +218,7 @@ int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
             }
         }
     }
-    return -1; // Fichero no encontrado
+    return -1; // no encuentra el fichero
 }
 
 
@@ -228,7 +226,7 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino, FILE *fich) {
     int indice_origen = -1, indice_destino = -1;
-    // Buscar el fichero origen y un espacio vacío en el directorio para el destino
+
     for (int i = 0; i < MAX_FICHEROS; i++) {
         if (strcmp(directorio[i].dir_nfich, nombreorigen) == 0) indice_origen = i;
         if (directorio[i].dir_inodo == NULL_INODO) {
@@ -236,10 +234,9 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
             break;
         }
     }
-    if (indice_origen == -1) return -1; // Fichero origen no encontrado
-    if (indice_destino == -1) return -1; // No hay espacio en el directorio para el fichero destino
+    if (indice_origen == -1) return -1; // origen no encontrado
+    if (indice_destino == -1) return -1; // no hay espacio suficiente
 
-    // Encontrar un inodo libre
     int nuevo_inodo = -1;
     for (int i = 0; i < MAX_INODOS; i++) {
         if (ext_bytemaps->bmap_inodos[i] == 0) {
@@ -247,9 +244,8 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
             break;
         }
     }
-    if (nuevo_inodo == -1) return -1; // No hay inodos libres
+    if (nuevo_inodo == -1) return -1;
 
-    // Asignar y copiar los bloques
     EXT_SIMPLE_INODE *inodo_origen = &inodos->blq_inodos[directorio[indice_origen].dir_inodo];
     EXT_SIMPLE_INODE *inodo_destino = &inodos->blq_inodos[nuevo_inodo];
     inodo_destino->size_fichero = inodo_origen->size_fichero;
@@ -264,17 +260,15 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
                 break;
             }
         }
-        if (bloques_copiados <= j) {  // No se encontraron suficientes bloques libres
+        if (bloques_copiados <= j) {
             return -1;
         }
     }
 
-    // Actualizar el directorio y bytemaps
     strncpy(directorio[indice_destino].dir_nfich, nombredestino, LEN_NFICH);
     directorio[indice_destino].dir_inodo = nuevo_inodo;
     ext_bytemaps->bmap_inodos[nuevo_inodo] = 1;
 
-    // Grabar cambios
     GrabarByteMaps(ext_bytemaps, fich);
     GrabarSuperBloque(ext_superblock, fich);
     Grabarinodosydirectorio(directorio, inodos, fich);
@@ -288,7 +282,6 @@ int CrearFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
                  EXT_DATOS *memdatos, char *nombre_fichero, FILE *fich) {
     int indice_directorio = -1, nuevo_inodo = -1, nuevo_bloque = -1;
 
-    // Buscar un espacio libre en el directorio
     for (int i = 0; i < MAX_FICHEROS; i++) {
         if (directorio[i].dir_inodo == NULL_INODO) {
             indice_directorio = i;
@@ -300,14 +293,12 @@ int CrearFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
         return -1;
     }
 
-    // Buscar un inodo libre
     nuevo_inodo = BuscarInodoLibre(ext_bytemaps);
     if (nuevo_inodo == -1) {
         printf("Error: No hay inodos libres.\n");
         return -1;
     }
 
-    // Buscar un bloque libre
     for (int i = 0; i < MAX_BLOQUES_DATOS; i++) {
         if (ext_bytemaps->bmap_bloques[i] == 0) {
             nuevo_bloque = i;
@@ -319,26 +310,23 @@ int CrearFichero(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
         return -1;
     }
 
-    // Configurar el inodo para el nuevo fichero
     EXT_SIMPLE_INODE *inodo = &inodos->blq_inodos[nuevo_inodo];
-    inodo->size_fichero = 0;  // Tamaño inicial del fichero
-    inodo->i_nbloque[0] = nuevo_bloque;  // Asignar el primer bloque de datos
+    inodo->size_fichero = 0;
+    inodo->i_nbloque[0] = nuevo_bloque;
     for (int i = 1; i < MAX_NUMS_BLOQUE_INODO; i++) {
-        inodo->i_nbloque[i] = NULL_BLOQUE;  // Los demás bloques están vacíos
+        inodo->i_nbloque[i] = NULL_BLOQUE;
     }
 
-    // Configurar la entrada del directorio
+
     strncpy(directorio[indice_directorio].dir_nfich, nombre_fichero, LEN_NFICH - 1);
     directorio[indice_directorio].dir_nfich[LEN_NFICH - 1] = '\0';
     directorio[indice_directorio].dir_inodo = nuevo_inodo;
 
-    // Actualizar los bytemaps y el superbloque
     ext_bytemaps->bmap_inodos[nuevo_inodo] = 1;
     ext_bytemaps->bmap_bloques[nuevo_bloque] = 1;
     ext_superblock->s_free_inodes_count--;
     ext_superblock->s_free_blocks_count--;
 
-    // Grabar los cambios en el archivo
     GrabarSuperBloque(ext_superblock, fich);
     GrabarByteMaps(ext_bytemaps, fich);
     Grabarinodosydirectorio(directorio, inodos, fich);
@@ -383,8 +371,8 @@ void GrabarDatos(EXT_DATOS *memdatos, FILE *fich) {
 int BuscarInodoLibre(EXT_BYTE_MAPS *ext_bytemaps) {
     for (int i = 0; i < MAX_INODOS; i++) {
         if (ext_bytemaps->bmap_inodos[i] == 0) {
-            return i;  // Retorna el índice del primer inodo libre encontrado
+            return i;  // devuelv el indice del primer inodo libre encontrado
         }
     }
-    return -1;  // Retorna -1 si no hay inodos libres
+    return -1;  // devuelve -1 si no hay inodos libres
 }
